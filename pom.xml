@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.kafka</groupId>
-	<artifactId>kafka_demo</artifactId>
+	<artifactId>custome-kafka-partitioner</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>kafka_demo</name>
+	<name>custome-kafka-partitioner</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>

@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'EC2_PUBLIC_IP', defaultValue: '3.121.45.67', description: 'Public IP of the EC2 instance')
+    }
+
     environment {
         AWS_ACCOUNT_ID = '258724892093'
         AWS_REGION = 'eu-north-1'
@@ -56,9 +60,18 @@ pipeline {
             }
         }
 
-        stage('Deploy to ECS/EKS') {
+        stage('Deploy to EC2') {
             steps {
-                echo 'Deployment logic here (e.g., update ECS service or use kubectl for EKS)'
+                sshagent(['ec2-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ec2-user@$EC2_PUBLIC_IP << 'EOF'
+                    aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 258724892093.dkr.ecr.eu-north-1.amazonaws.com
+                    docker pull 258724892093.dkr.ecr.eu-north-1.amazonaws.com/kafka-demo:latest
+                    docker rm -f kafka-demo-container || true
+                    docker run -d --name kafka-demo-container -p 8080:8080 258724892093.dkr.ecr.eu-north-1.amazonaws.com/kafka-demo:latest
+                    EOF
+                    '''
+                }
             }
         }
     }

@@ -9,13 +9,6 @@ pipeline {
     }
 
     stages {
-        stage('Verify Tools') {
-            steps {
-                bat 'docker --version'
-                bat 'aws --version'
-            }
-        }
-
         stage('Checkout Code') {
             steps {
                 git branch: 'master', url: 'https://github.com/prashanthipasala/custome-kafka-partitioner.git'
@@ -28,26 +21,38 @@ pipeline {
             }
         }
 
+        stage('Configure AWS CLI') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    bat '''
+                    aws configure set aws_access_key_id %AWS_ACCESS_KEY_ID%
+                    aws configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY%
+                    aws configure set default.region %AWS_REGION%
+                    '''
+                }
+            }
+        }
+
         stage('Login to AWS ECR') {
             steps {
-                bat """
+                bat '''
                 aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com
-                """
+                '''
             }
         }
 
         stage('Tag and Push Image to ECR') {
             steps {
-                bat """
+                bat '''
                 docker tag %ECR_REPO_NAME%:%IMAGE_TAG% %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_REPO_NAME%:%IMAGE_TAG%
                 docker push %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_REPO_NAME%:%IMAGE_TAG%
-                """
+                '''
             }
         }
 
         stage('Deploy to ECS/EKS') {
             steps {
-                echo 'Deployment step here (manual update / script / kubectl apply for EKS)'
+                echo 'Deployment logic here (e.g., update ECS service or use kubectl for EKS)'
             }
         }
     }

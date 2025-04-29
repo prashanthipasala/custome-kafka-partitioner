@@ -64,7 +64,7 @@ pipeline {
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@$EC2_PUBLIC_IP << 'EOF'
+                    ssh -o StrictHostKeyChecking=no ec2-user@'$EC2_PUBLIC_IP' << EOF
                     aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 258724892093.dkr.ecr.eu-north-1.amazonaws.com
                     docker pull 258724892093.dkr.ecr.eu-north-1.amazonaws.com/kafka-demo:latest
                     docker rm -f kafka-demo-container || true
